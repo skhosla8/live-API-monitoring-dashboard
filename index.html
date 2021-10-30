@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live API Monitoring Dashboard</title>
+    <script src="https://unpkg.com/react@16/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js" crossorigin></script>
+</head>
+
+<body>
+    <div id="root"></div>
+
+    <style>
+        :root {
+            --primary-color: #ff5600;
+            --secondary-color: #673ab7;
+
+            --primary-text: #fff;
+            --secondary-text: #838591;
+
+            --metrics-positive: #47b500;
+            --metrics-negative: #ff3838;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: "Roboto", sans-serif;
+            font-weight: bold;
+            font-size: 16px;
+            height: 100vh;
+            margin: 0 auto;
+        }
+
+        .App {
+            position: relative;
+            width: 95vw;
+            max-width: 900px;
+            max-height: 85vh;
+            background: url('https://www.jobtread.com/images/home/pura-vida-case-study-bg.jpg') no-repeat bottom left;
+            background-size: cover;
+            padding: 3rem 1rem 1rem;
+            border-radius: 9px;
+        }
+
+        .dashboard-button {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background-color: var(--primary-color);
+            color: #fff;
+            font-size: 1.3rem;
+            padding: 6px 12px;
+            outline: none;
+            border: none;
+            border-top-right-radius: 8px;
+        }
+
+        .dashboard-button:hover {
+            background-color: #242735;
+            cursor: pointer;
+        }
+
+        .menu-container {
+            position: absolute;
+            top: 20;
+            padding: 4rem 0;
+            width: 20%;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            width: 18%;
+            margin-top: 1.5rem;
+            color: var(--secondary-text);
+        }
+
+        .menu-item:hover {
+            cursor: pointer;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+        }
+
+        .logo-image {
+            width: 25px;
+            margin-right: 0.5rem;
+        }
+
+        .logo-text {
+            color: var(--primary-text);
+            font-size: 1.2rem;
+            margin-top: 0.1rem;
+        }
+
+        .icon {
+            color: var(--secondary-text);
+            width: 21px;
+        }
+
+        .active-text {
+            color: var(--primary-text);
+        }
+
+        .menu-text {
+            margin-left: 0.8rem;
+            font-size: 0.75rem;
+        }
+
+        .grid {
+            width: 80%;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-rows: repeat(2, auto);
+            grid-template-areas:
+                'container-1 container-2 container-3'
+                'container-4 container-4 container-4';
+            grid-gap: 16px;
+            margin-left: 20%;
+        }
+
+        .grid-item {
+            color: var(--secondary-text);
+            background-color: rgba(0, 0, 0, 0.6);
+            font-size: 1.3rem;
+        }
+
+        .text {
+            font-size: 0.9rem;
+            margin-top: 1rem;
+            margin-left: 1rem;
+        }
+
+        #container-1 {
+            grid-area: container-1;
+            height: 200px;
+        }
+
+        #container-2 {
+            grid-area: container-2;
+            height: 200px;
+        }
+
+        #container-3 {
+            grid-area: container-3;
+            height: 200px;
+        }
+
+        #container-4 {
+            grid-area: container-4;
+            height: 280px;
+        }
+
+        .average-time {
+            font-size: 3rem;
+            color: var(--primary-text);
+            margin-left: 5.5rem;
+        }
+
+        .container-data {
+            font-size: 2.5rem;
+            text-align: center;
+            color: var(--primary-text);
+            margin: 0;
+            margin-top: 1rem;
+        }
+
+        .container-description {
+            font-size: 0.9rem;
+            text-align: center;
+            margin-top: 0.3rem;
+        }
+
+        .line-break {
+            width: 80%;
+            height: 0.1px;
+            border-width: 0;
+            background-color: rgba(131, 133, 145, 0.5);
+        }
+
+        .positive-metrics {
+            color: var(--metrics-positive);
+        }
+
+        .negative-metrics {
+            color: var(--metrics-negative);
+        }
+
+        .sub-text {
+            font-size: 0.8rem;
+            text-align: center;
+        }
+
+        .circular {
+            height: 100px;
+            width: 100px;
+            position: relative;
+            transform: scale(1.2);
+            margin: 0 auto;
+            margin-top: 1.8rem;
+        }
+
+        .inner {
+            position: absolute;
+            z-index: 6;
+            top: 50%;
+            left: 50%;
+            height: 80px;
+            width: 80px;
+            margin: -40px 0 0 -40px;
+            background: rgba(0, 0, 0, 0.9);
+            border-radius: 100%;
+        }
+
+        .number {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            font-size: 1.4rem;
+            color: var(--primary-text);
+        }
+
+        .bar {
+            position: absolute;
+            height: 100%;
+            width: 100%;
+            background: #838591;
+            border-radius: 100%;
+            clip: rect(0px, 100px, 100px, 50px);
+        }
+
+        .progress {
+            position: absolute;
+            height: 100%;
+            width: 100%;
+            border-radius: 100%;
+            clip: rect(0px, 50px, 100px, 0px);
+            background: var(--metrics-positive);
+        }
+
+        .left .progress {
+            z-index: 1;
+            animation: left 4s linear both;
+        }
+
+        @keyframes left {
+            100% {
+                transform: rotate(180deg);
+            }
+        }
+
+        .right {
+            transform: rotate(180deg);
+            z-index: 3;
+        }
+
+        .right .progress {
+            animation: right 4s linear both;
+            animation-delay: 4s;
+        }
+
+        @keyframes right {
+            100% {
+                transform: rotate(180deg);
+            }
+        }
+
+        svg {
+            width: 100%;
+            max-height: 50%;
+            margin-top: 0.5rem;
+        }
+
+        .color-stop-1 {
+            stop-color: var(--primary-color);
+        }
+
+        .color-stop-2 {
+            stop-color: var(--secondary-color);
+        }
+
+        .bar-rect {
+            fill: url('#gradient');
+        }
+
+        @media (max-width: 735px) {
+            .menu-container {
+                display: none;
+            }
+
+            .grid {
+                width: 100%;
+                margin-left: 0;
+                grid-gap: 12px;
+            }
+
+            .logo-container {
+                margin: -1.5rem 0 1.5rem;
+            }
+
+            .container-data {
+                font-size: 2.2rem;
+            }
+
+            .average-time {
+                font-size: 2.8rem;
+            }
+
+            .circular {
+                transform: scale(1.1);
+            }
+        }
+    </style>
+
+    <script type='text/javascript'>
+        const e = React.createElement;
+
+        function SvgContainer(props) {
+            const data = props.data;
+
+            const width = 960,
+                height = 300;
+
+            return e(
+                'svg',
+                {
+                    id: 'svg',
+                    viewBox: `0 0 ${width} ${height}`
+                },
+                e(
+                    'linearGradient',
+                    {
+                        id: 'gradient',
+                    },
+                    e(
+                        'stop',
+                        {
+                            className: 'color-stop-1',
+                            offset: '0%'
+                        }
+                    ),
+                    e(
+                        'stop',
+                        {
+                            className: 'color-stop-2',
+                            offset: '100%'
+                        }
+                    )
+                ),
+                data.map((value, index) => {
+                    return e(
+                        'g',
+                        {
+                            className: 'bar'
+                        },
+                        e(
+                            'rect',
+                            {
+                                className: 'bar-rect',
+                                x: (index * (950 / data.length)) + 15,
+                                y: height - 50 - value,
+                                height: `${value}px`,
+                                maxHeight: '100px',
+                                width: `${750 / data.length}px`,
+                                stroke: '#000',
+                                strokeWidth: '5',
+                                key: index
+                            }
+                        ),
+                        e(
+                            'text',
+                            {
+                                x: `${(index * (950 / data.length)) + 50}`,
+                                y: (height - 5),
+                                textAnchor: 'middle',
+                                fontSize: '1.9rem',
+                                fill: '#838591'
+                            },
+                            `${value}`
+                        ),
+                    )
+                })
+            )
+        }
+
+        function App() {
+            const [responseTimes, setResponseTimes] = React.useState([]);
+            const [averageTime, setAverageTime] = React.useState(0);
+
+            React.useEffect(() => {
+                getData();
+                loadProgressBar();
+
+                const interval = setInterval(getData, 1000);
+
+                return () => clearInterval(interval);
+            }, [])
+
+            React.useEffect(() => {
+                getAverage();
+            }, [responseTimes])
+
+            function getAverage(array) {
+                let average;
+
+                if (responseTimes.length === 10) {
+                    const sum = responseTimes.reduce((accumulator, current) => {
+                        return accumulator + current;
+                    });
+
+                    average = Math.round(sum / responseTimes.length);
+                } else {
+                    average = 0;
+                }
+
+                setAverageTime(average);
+                return average;
+            }
+
+            function apiCall() {
+                const startTime = performance.now();
+
+                const data = fetch('https://api.jobtread.com/healthz')
+                    .then(response => {
+                        if (response.ok) {
+                            return response.json();
+                        }
+                    })
+                    .then(data => performance.now() - startTime)
+                    .catch(error => console.log(`Error: ${error}`));
+
+                return data;
+            }
+
+            async function getData() {
+                let arr = [];
+
+                for (let i = 0; i < 10; i++) {
+                    const responseTime = await apiCall();
+                    arr.push(+responseTime.toFixed(1));
+                }
+
+                setResponseTimes(arr);
+                return arr;
+            }
+
+            function loadProgressBar() {
+                const number = document.querySelector('.number');
+                let counter = 0;
+
+                const progressInterval = setInterval(() => {
+                    if (counter === 99) {
+                        clearInterval(progressInterval);
+                    }
+
+                    counter += 1;
+                    number.textContent = counter + '%';
+                }, 80);
+            }
+
+            return e(
+                'div',
+                {
+                    className: 'App'
+                },
+                e(
+                    'div',
+                    {
+                        className: 'logo-container'
+                    },
+                    e(
+                        'img',
+                        {
+                            className: 'logo-image',
+                            src: 'https://i.ibb.co/RpPQgDx/appcard-16f28baa-b044-4ccf-8524-e3da281198b6.png',
+                            alt: 'JobTread Logo'
+                        },
+                    ),
+                    e(
+                        'span',
+                        {
+                            className: 'logo-text'
+                        },
+                        'JOBTREAD'
+                    )
+                ),
+                e(
+                    'div',
+                    {
+                        className: 'menu-container'
+                    },
+                    e(
+                        'div',
+                        {
+                            className: 'menu-item'
+                        },
+                        e(
+                            'img',
+                            {
+                                className: 'icon',
+                                src: 'https://i.ibb.co/WzcLjps/layout-grid-fill-1.png',
+                                alt: 'dashboard-icon'
+                            },
+                        ),
+                        e(
+                            'span',
+                            {
+                                className: 'active-text menu-text'
+                            },
+                            'DASHBOARD'
+                        )
+                    ),
+                    e(
+                        'div',
+                        {
+                            className: 'menu-item'
+                        },
+                        e(
+                            'img',
+                            {
+                                className: 'icon',
+                                src: 'https://i.ibb.co/rfSy01W/notification-2-fill.png',
+                                alt: 'alert-icon'
+                            },
+                        ),
+                        e(
+                            'span',
+                            {
+                                className: 'menu-text'
+                            },
+                            'ALERTS'
+                        )
+                    ),
+                    e(
+                        'div',
+                        {
+                            className: 'menu-item'
+                        },
+                        e(
+                            'img',
+                            {
+                                className: 'icon',
+                                src: 'https://i.ibb.co/cbhmDQn/user-fill-1.png',
+                                alt: 'user-icon'
+                            },
+                        ),
+                        e(
+                            'span',
+                            {
+                                className: 'menu-text'
+                            },
+                            'USERS'
+                        )
+                    ),
+                    e(
+                        'div',
+                        {
+                            className: 'menu-item'
+                        },
+                        e(
+                            'img',
+                            {
+                                className: 'icon',
+                                src: 'https://i.ibb.co/tMN0CC7/settings-5-fill-1.png',
+                                alt: 'settings-icon'
+                            },
+                        ),
+                        e(
+                            'span',
+                            {
+                                className: 'menu-text'
+                            },
+                            'SETTINGS'
+                        )
+                    ),
+                ),
+                e(
+                    'button',
+                    {
+                        className: 'dashboard-button'
+                    },
+                    '\u2715'
+                ),
+                e(
+                    'div',
+                    {
+                        className: 'grid',
+                    },
+                    e(
+                        'div',
+                        {
+                            id: 'container-1',
+                            className: 'grid-item'
+                        },
+                        e(
+                            'h2',
+                            {
+                                className: 'text'
+                            },
+                            'USERS'
+                        ),
+                        e(
+                            'p',
+                            {
+                                className: 'container-data'
+                            },
+                            '17'
+                        ),
+                        e(
+                            'p',
+                            {
+                                className: 'container-description'
+                            },
+                            'Total Users'
+                        ),
+                        e(
+                            'hr',
+                            {
+                                className: 'line-break'
+                            },
+                            null
+                        ),
+                        e(
+                            'div',
+                            {
+                                className: 'sub-text'
+                            },
+                            e(
+                                'span',
+                                {
+                                    className: 'positive-metrics'
+                                },
+                                '+23.8%'
+                            ),
+                            e(
+                                'span',
+                                null,
+                                ' from last week.'
+                            )
+                        )
+                    ),
+                    e(
+                        'div',
+                        {
+                            id: 'container-2',
+                            className: 'grid-item'
+                        },
+                        e(
+                            'h2',
+                            {
+                                className: 'text'
+                            },
+                            'API CALLS'
+                        ),
+                        e(
+                            'p',
+                            {
+                                className: 'container-data'
+                            },
+                            '5,841'
+                        ),
+                        e(
+                            'p',
+                            {
+                                className: 'container-description'
+                            },
+                            'Total API Calls'
+                        ),
+                        e(
+                            'hr',
+                            {
+                                className: 'line-break'
+                            },
+                            null
+                        ),
+                        e(
+                            'div',
+                            {
+                                className: 'sub-text'
+                            },
+                            e(
+                                'span',
+                                {
+                                    className: 'negative-metrics'
+                                },
+                                '-0.3%'
+                            ),
+                            e(
+                                'span',
+                                null,
+                                ' from last week.'
+                            )
+                        )
+                    ),
+                    e(
+                        'div',
+                        {
+                            id: 'container-3',
+                            className: 'grid-item'
+                        },
+                        e(
+                            'h2',
+                            {
+                                className: 'text'
+                            },
+                            'STATUS'
+                        ),
+                        e(
+                            'div',
+                            {
+                                className: 'circular'
+                            },
+                            e(
+                                'div',
+                                {
+                                    className: 'inner'
+                                },
+                                null
+                            ),
+                            e(
+                                'div',
+                                {
+                                    className: 'number'
+                                },
+                                '100%'
+                            ),
+                            e(
+                                'div',
+                                {
+                                    className: 'circle'
+                                },
+                                e(
+                                    'div',
+                                    {
+                                        className: 'bar left'
+                                    },
+                                    e(
+                                        'div',
+                                        {
+                                            className: 'progress'
+                                        }
+                                    )
+                                ),
+                                e(
+                                    'div',
+                                    {
+                                        className: 'bar right'
+                                    },
+                                    e(
+                                        'div',
+                                        {
+                                            className: 'progress'
+                                        }
+                                    )
+                                )
+                            )
+                        )
+                    ),
+                    e(
+                        'div',
+                        {
+                            id: 'container-4',
+                            className: 'grid-item',
+                            data: responseTimes
+                        },
+                        e(
+                            'h2',
+                            {
+                                className: 'text'
+                            },
+                            'API VERSION DD82AC'
+                        ),
+                        e(
+                            'div',
+                            {
+                                style: {
+                                    color: '#838591',
+                                    fontSize: '0.9rem',
+                                    marginTop: '2.5rem',
+                                    marginLeft: '11.5rem'
+                                }
+                            },
+                            'Average Time'
+                        ),
+                        e(
+                            'div',
+                            {
+                                style: {
+                                    marginTop: '-1.6rem'
+                                }
+                            },
+                            e(
+                                'span',
+                                {
+                                    className: 'average-time'
+                                },
+                                `${averageTime}`
+                            ),
+                            e(
+                                'span',
+                                {
+                                    style: {
+                                        color: '#ff5600',
+                                        fontSize: '1rem',
+                                        marginLeft: '0.4rem',
+                                    }
+                                },
+                                'ms'
+                            ),
+                        ),
+                        e(
+                            SvgContainer,
+                            {
+                                id: 'svg-container',
+                                data: responseTimes
+                            }
+                        )
+
+                    )
+                )
+            );
+        }
+
+        ReactDOM.render(e(App), document.getElementById('root'));
+    </script>
+</body>
+
+</html>
