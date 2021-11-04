@@ -408,18 +408,12 @@
                 getAverage();
             }, [responseTimes])
 
-            function getAverage(array) {
-                let average;
+            async function getAverage() {
+                const sum = await responseTimes.reduce((accumulator, current) => {
+                    return accumulator + current;
+                });
 
-                if (responseTimes.length === 10) {
-                    const sum = responseTimes.reduce((accumulator, current) => {
-                        return accumulator + current;
-                    });
-
-                    average = Math.round(sum / responseTimes.length);
-                } else {
-                    average = 0;
-                }
+                const average = Math.round(sum / responseTimes.length);
 
                 setAverageTime(average);
                 return average;
