@@ -40,7 +40,7 @@
             width: 95vw;
             max-width: 900px;
             max-height: 85vh;
-            background: url('https://www.jobtread.com/images/home/pura-vida-case-study-bg.jpg') no-repeat bottom left;
+            background: url('https://i.ibb.co/0t4tKNw/case-study-bg.jpg') no-repeat bottom left;
             background-size: cover;
             padding: 3rem 1rem 1rem;
             border-radius: 9px;
@@ -359,7 +359,8 @@
                     return e(
                         'g',
                         {
-                            className: 'bar'
+                            className: 'bar',
+                            key: `bar-${index}`
                         },
                         e(
                             'rect',
@@ -368,11 +369,11 @@
                                 x: (index * (950 / data.length)) + 15,
                                 y: height - 50 - value,
                                 height: `${value}px`,
-                                maxHeight: '100px',
+                                maxheight: '100px',
                                 width: `${750 / data.length}px`,
                                 stroke: '#000',
                                 strokeWidth: '5',
-                                key: index
+                                key: `rect-${index}`
                             }
                         ),
                         e(
@@ -396,57 +397,56 @@
             const [averageTime, setAverageTime] = React.useState(0);
 
             React.useEffect(() => {
-                getData();
+                getData(10);
                 loadProgressBar();
 
-                const interval = setInterval(getData, 1000);
+                const interval = setInterval(() => {
+                    getData(10);
+                }, 1000);
 
                 return () => clearInterval(interval);
             }, [])
 
             React.useEffect(() => {
-                getAverage();
+                getAverage(responseTimes);
             }, [responseTimes])
 
-            async function getAverage() {
-                const sum = await responseTimes.reduce((accumulator, current) => {
-                    return accumulator + current;
-                });
+            const getAverage = (array) => {
+                if (!array.length) return;
 
-                const average = Math.round(sum / responseTimes.length);
+                const average = Math.round(array.reduce((a, b) => {
+                    return a + b;
+                }) / array.length);
 
                 setAverageTime(average);
-                return average;
             }
 
-            function apiCall() {
+            const apiCall = () => {
                 const startTime = performance.now();
+                const url = 'https://api.jobtread.com/healthz';
 
-                const data = fetch('https://api.jobtread.com/healthz')
+                const time = fetch(url)
                     .then(response => {
-                        if (response.ok) {
-                            return response.json();
-                        }
+                        if (response.ok) return response.json();
                     })
-                    .then(data => performance.now() - startTime)
+                    .then(data => +(performance.now() - startTime).toFixed(1))
                     .catch(error => console.log(`Error: ${error}`));
 
-                return data;
+                return time;
             }
 
-            async function getData() {
-                let arr = [];
+            const getData = async (calls) => {
+                const promises = [];
 
-                for (let i = 0; i < 10; i++) {
-                    const responseTime = await apiCall();
-                    arr.push(+responseTime.toFixed(1));
+                for (const item of new Array(calls)) {
+                    promises.push(await apiCall());
                 }
 
-                setResponseTimes(arr);
-                return arr;
+                const data = await Promise.all(promises);
+                setResponseTimes(data);
             }
 
-            function loadProgressBar() {
+            const loadProgressBar = () => {
                 const number = document.querySelector('.number');
                 let counter = 0;
 
@@ -475,7 +475,7 @@
                         {
                             className: 'logo-image',
                             src: 'https://i.ibb.co/RpPQgDx/appcard-16f28baa-b044-4ccf-8524-e3da281198b6.png',
-                            alt: 'JobTread Logo'
+                            alt: 'NewCoin Logo'
                         },
                     ),
                     e(
@@ -483,7 +483,7 @@
                         {
                             className: 'logo-text'
                         },
-                        'JOBTREAD'
+                        'NEWCOIN'
                     )
                 ),
                 e(
